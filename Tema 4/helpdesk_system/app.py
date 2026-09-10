@@ -156,6 +156,7 @@ def main():
             submitted = st.form_submit_button("🚀 Enviar Consulta")
             
             if submitted and consulta.strip():
+                # * INICIO DE LA CONSULTA *
                 # Limpiar ejemplo usado
                 if "consulta_ejemplo" in st.session_state:
                     del st.session_state.consulta_ejemplo
@@ -241,7 +242,7 @@ def main():
                                         config,
                                         {"respuesta_humano": respuesta_humano}
                                     )
-                                    # stream(None): reanuda el grafo pausado con el mismo config
+                                    # ? stream(None): reanuda el grafo pausado con el mismo config
                                     for chunk in st.session_state.helpdesk.stream(None, config=config, stream_mode="updates"):
                                         for nodo, salida in chunk.items():
                                             if "historial" in salida and salida["historial"]:
