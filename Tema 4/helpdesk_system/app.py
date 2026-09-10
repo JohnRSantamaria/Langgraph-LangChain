@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Inicializar sesión
+# Inicializar sesión — grafo compilado con checkpointer (ver ../LANGGRAPH_NOTAS.md)
 if "helpdesk" not in st.session_state:
     st.session_state.helpdesk = crear_helpdesk()
     st.session_state.tickets = {}
@@ -47,12 +47,14 @@ def procesar_consulta(consulta: str, ticket_id: str):
         historial=[]
     )
     
+    # thread_id identifica el ticket en helpdesk.db — https://docs.langchain.com/oss/python/langgraph/checkpointers#threads
     config = {"configurable": {"thread_id": ticket_id}}
-    
+
     # Procesar con streaming
     historial_procesamiento = []
     
     try:
+        # Primera ejecución; persiste checkpoints por thread_id — https://docs.langchain.com/oss/python/langgraph/streaming
         for chunk in st.session_state.helpdesk.stream(
             estado_inicial, 
             config=config, 
@@ -62,7 +64,7 @@ def procesar_consulta(consulta: str, ticket_id: str):
                 if "historial" in salida and salida["historial"]:
                     historial_procesamiento.extend(salida["historial"])
         
-        # Obtener estado final
+        # Lee HelpdeskState guardado en SQLite — https://docs.langchain.com/oss/python/langgraph/checkpointers
         estado_final = st.session_state.helpdesk.get_state(config)
         
         return estado_final.values, historial_procesamiento, config
@@ -233,14 +235,13 @@ def main():
                         with col_btn1:
                             if st.button(f"💾 Enviar Respuesta", key=f"btn_{ticket_id}"):
                                 if respuesta_humano.strip():
-                                    # Actualizar estado con respuesta humana
                                     config = ticket_data['config']
+                                    # update_state: inyecta respuesta en el checkpoint — https://docs.langchain.com/oss/python/langgraph/interrupts
                                     st.session_state.helpdesk.update_state(
                                         config,
                                         {"respuesta_humano": respuesta_humano}
                                     )
-                                    
-                                    # Continuar procesamiento
+                                    # stream(None): reanuda el grafo pausado con el mismo config
                                     for chunk in st.session_state.helpdesk.stream(None, config=config, stream_mode="updates"):
                                         for nodo, salida in chunk.items():
                                             if "historial" in salida and salida["historial"]:
@@ -260,12 +261,12 @@ def main():
                                 # Usar la respuesta RAG como base
                                 respuesta_rag = resultado.get('respuesta_rag', '')
                                 config = ticket_data['config']
+                                # update_state: usa respuesta RAG como respuesta_humano — https://docs.langchain.com/oss/python/langgraph/interrupts
                                 st.session_state.helpdesk.update_state(
                                     config,
                                     {"respuesta_humano": respuesta_rag}
                                 )
-                                
-                                # Continuar procesamiento
+                                # stream(None): reanuda el grafo pausado con el mismo config
                                 for chunk in st.session_state.helpdesk.stream(None, config=config, stream_mode="updates"):
                                     for nodo, salida in chunk.items():
                                         if "historial" in salida and salida["historial"]:

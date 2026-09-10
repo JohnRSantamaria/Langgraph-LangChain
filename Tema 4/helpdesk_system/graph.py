@@ -6,6 +6,7 @@ from config import *
 from langchain_core.prompts import ChatPromptTemplate
 from langgraph.graph import StateGraph, START, END
 import sqlite3
+# langgraph-checkpoint-sqlite — persiste estado en helpdesk.db (ver ../LANGGRAPH_NOTAS.md)
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 # Definicion del Estado
@@ -192,7 +193,8 @@ Responde solo con "automatico" o "escalado" y una breve justificación (máximo 
             self.decidir_desde_humano,
             {
                 "procesar_humano": "procesar_humano",
-                "esperar": END # Pausar la ejecucion del grafo hasta que responda el humano
+                # Sin respuesta_humano → END; la UI reanuda con update_state + stream(None)
+                "esperar": END
             }
         )
 
@@ -212,6 +214,7 @@ Responde solo con "automatico" o "escalado" y una breve justificación (máximo 
 
         checkpointer = SqliteSaver(conn)
 
+        # checkpointer + interrupt_before: pausa y reanudación HITL — https://docs.langchain.com/oss/python/langgraph/interrupts
         compiled = self.graph.compile(
             checkpointer=checkpointer,
             interrupt_before=["procesar_humano"]

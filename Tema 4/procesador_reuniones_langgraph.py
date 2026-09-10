@@ -162,6 +162,7 @@ def create_workflow():
     workflow.add_edge("generate_minutes", "create_summary")
     workflow.add_edge("create_summary", END)
     
+    # LangGraph: pipeline lineal, sin thread_id ni checkpointer (ver LANGGRAPH_NOTAS.md#grafos-sin-persistencia)
     return workflow.compile()
 
 # ============= FUNCIONES DE PROCESAMIENTO =============

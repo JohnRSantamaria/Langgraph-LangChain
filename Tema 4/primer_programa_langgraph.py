@@ -28,7 +28,7 @@ graph.add_edge(START, "Mayus")
 graph.add_edge("Mayus", "Contar")
 graph.add_edge("Contar", END)
 
-# 6. Compilar el grafo
+# 6. Compilar el grafo — LangGraph: sin checkpointer; cada invoke empieza de cero (ver LANGGRAPH_NOTAS.md#grafos-sin-persistencia)
 compiled_graph = graph.compile()
 
 # 7. Invocar el grafo con un estado inicial

@@ -167,7 +167,8 @@ def create_workflow():
     workflow.add_edge("extract_actions", "generate_minutes")
     workflow.add_edge("generate_minutes", "create_summary")
     workflow.add_edge("create_summary", END)
-    
+
+    # LangGraph: reducers Annotated[..., add] en State — ver LANGGRAPH_NOTAS.md y https://docs.langchain.com/oss/python/langgraph/graph-api
     return workflow.compile()
 
 # ============= FUNCIONES DE PROCESAMIENTO =============

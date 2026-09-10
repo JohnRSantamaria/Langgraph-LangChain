@@ -32,6 +32,7 @@ graph.add_conditional_edges(START, decidir_rama)
 graph.add_edge("Par", END)
 graph.add_edge("Impar", END)
 
+# LangGraph: edges condicionales, sin persistencia entre runs (ver LANGGRAPH_NOTAS.md#grafos-sin-persistencia)
 compiled = graph.compile()
 
 # Probar el grafo con ejemplos
