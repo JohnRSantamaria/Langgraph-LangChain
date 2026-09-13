@@ -1,11 +1,17 @@
 # Memoria de conversación con LangGraph: MessagesState + checkpointer.
 # Ver Tema 5/MEMORIA_NOTAS.md (thread_id, MemorySaver vs SqliteSaver).
+
+import os 
+from dotenv import load_dotenv
 from langgraph.graph import MessagesState, StateGraph, START
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, api_key=OPENAI_API_KEY)
 
 workflow = StateGraph(state_schema=MessagesState)
 

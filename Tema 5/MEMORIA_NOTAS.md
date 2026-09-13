@@ -34,6 +34,14 @@ flowchart TB
 
     conv --> short
     long -.->|"busca e inyecta en system"| conv
+
+    classDef conv fill:#0284C7,stroke:#075985,color:#fff
+    classDef chk fill:#4F46E5,stroke:#312E81,color:#fff
+    classDef vec fill:#059669,stroke:#065F46,color:#fff
+
+    class M1 conv
+    class M2 chk
+    class M3 vec
 ```
 
 1. **Conversación:** lista de mensajes que el LLM ve en este turno.

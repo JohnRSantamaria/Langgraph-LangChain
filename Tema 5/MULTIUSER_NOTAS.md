@@ -42,6 +42,16 @@ flowchart LR
     JSON -->|"titulo, lista chats"| UI
     LG -->|"messages Human/AI"| UI
     CH -->|"hechos personal/pro"| chatbot
+
+    classDef ui fill:#4F46E5,stroke:#312E81,color:#fff
+    classDef meta fill:#64748B,stroke:#334155,color:#fff
+    classDef lg fill:#0284C7,stroke:#075985,color:#fff
+    classDef ch fill:#059669,stroke:#065F46,color:#fff
+
+    class UI ui
+    class JSON meta
+    class LG lg
+    class CH ch
 ```
 
 | Almacén | Qué guarda | Para qué |
@@ -81,6 +91,18 @@ flowchart LR
     MR -->|"search_vector_memory"| CHROMA["Chroma"]
     CO -->|"trim_messages"| TRIM["Recorte tokens"]
     ME -->|"extract_and_store"| CHROMA
+
+    classDef io fill:#059669,stroke:#065F46,color:#fff
+    classDef vec fill:#DB2777,stroke:#9D174D,color:#fff
+    classDef opt fill:#D97706,stroke:#92400E,color:#fff
+    classDef gen fill:#0284C7,stroke:#075985,color:#fff
+    classDef ext fill:#4F46E5,stroke:#312E81,color:#fff
+
+    class START,END io
+    class MR,CHROMA vec
+    class CO,TRIM opt
+    class RG gen
+    class ME ext
 ```
 
 | Nodo | Función |
