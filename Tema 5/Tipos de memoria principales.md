@@ -2,24 +2,28 @@
 
 La gestión inteligente de memoria es fundamental para crear agentes conversacionales efectivos. Mientras que la memoria básica y la ventana deslizante cubren casos fundamentales, existen estrategias más sofisticadas que pueden transformar significativamente la experiencia del usuario. En este artículo, exploraremos las técnicas de gestión de memoria más importantes que puedes implementar en LangGraph.
 
-Mapa del tema y scripts del curso: [`MEMORIA_NOTAS.md`](MEMORIA_NOTAS.md).
+Mapa del tema y scripts del curso: `[MEMORIA_NOTAS.md](MEMORIA_NOTAS.md)`.
 
 ### Índice de estudio
 
-| # | Estrategia | Idea en una línea |
-| --- | --- | --- |
-| — | [Problema](#el-problema-de-la-memoria-ilimitada) | Por qué no basta con guardar todo |
-| 1 | [Resumen](#1-memoria-de-resumen-summarization-memory) | Comprimir lo viejo en un `SystemMessage` |
-| 2 | [Filtrado](#2-memoria-de-filtrado-inteligente) | Conservar mensajes “importantes” |
-| 3 | [Tokens](#3-memoria-por-límite-de-tokens) | Recortar por presupuesto de tokens |
-| 4 | [Híbrida](#4-memoria-híbrida-por-tipo-de-mensaje) | Reglas distintas por Human / AI / System |
-| 5 | [Ventana adaptativa](#5-memoria-con-ventana-deslizante-adaptativa) | Últimos N mensajes, N dinámico |
-| 6 | [Prioridad de contexto](#6-memoria-con-prioridad-de-contexto) | Top-K por relevancia al tema actual |
-| — | [Mejores prácticas](#mejores-prácticas) · [Conclusión](#conclusión) | Cierre del artículo |
+
+| #   | Estrategia                                                          | Idea en una línea                        |
+| --- | ------------------------------------------------------------------- | ---------------------------------------- |
+| —   | [Problema](#el-problema-de-la-memoria-ilimitada)                    | Por qué no basta con guardar todo        |
+| 1   | [Resumen](#1-memoria-de-resumen-summarization-memory)               | Comprimir lo viejo en un `SystemMessage` |
+| 2   | [Filtrado](#2-memoria-de-filtrado-inteligente)                      | Conservar mensajes “importantes”         |
+| 3   | [Tokens](#3-memoria-por-límite-de-tokens)                           | Recortar por presupuesto de tokens       |
+| 4   | [Híbrida](#4-memoria-híbrida-por-tipo-de-mensaje)                   | Reglas distintas por Human / AI / System |
+| 5   | [Ventana adaptativa](#5-memoria-con-ventana-deslizante-adaptativa)  | Últimos N mensajes, N dinámico           |
+| 6   | [Prioridad de contexto](#6-memoria-con-prioridad-de-contexto)       | Top-K por relevancia al tema actual      |
+| —   | [Mejores prácticas](#mejores-prácticas) · [Conclusión](#conclusión) | Cierre del artículo                      |
+
 
 **Leyenda de colores** (igual que en Tema 3–4): índigo = estado / memoria persistida · azul = procesamiento · verde = salida / LLM · naranja = decisión / routing · gris = restricciones o entrada · rosa = vectorial / recuperación semántica.
 
 ---
+
+
 
 ## El Problema de la Memoria Ilimitada
 
@@ -55,9 +59,13 @@ flowchart TB
     class P1,P2,P3,P4 warn
 ```
 
-> **Para aclarar:** en LangGraph el **checkpointer** puede guardar **todos** los mensajes del hilo (`thread_id`), pero el nodo del chatbot suele **recortar o transformar** la lista antes de `llm.invoke(...)`. La memoria “ilimitada” en disco no implica contexto ilimitado en el modelo. Ver ventana deslizante en [`memoria_ventana_deslizante.py`](memoria_ventana_deslizante.py) y [`MEMORIA_NOTAS.md`](MEMORIA_NOTAS.md).
+
+
+> **Para aclarar:** en LangGraph el **checkpointer** puede guardar **todos** los mensajes del hilo (`thread_id`), pero el nodo del chatbot suele **recortar o transformar** la lista antes de `llm.invoke(...)`. La memoria “ilimitada” en disco no implica contexto ilimitado en el modelo. Ver ventana deslizante en `[memoria_ventana_deslizante.py](memoria_ventana_deslizante.py)` y `[MEMORIA_NOTAS.md](MEMORIA_NOTAS.md)`.
 
 ---
+
+
 
 ## Estrategias de Gestión de Memoria
 
@@ -106,16 +114,22 @@ flowchart LR
     class S6 e6
 ```
 
-| Estrategia | Dispara cuando… | ¿Llama al LLM extra? | Riesgo principal |
-| --- | --- | --- | --- |
-| Resumen | Muchos turnos (ej. ≥ 10 msgs) | Sí (generar resumen) | Perder matices no reflejados en el resumen |
-| Filtrado | Historial largo + reglas/heurísticas | No (solo reglas) | Falsos negativos (“importante” no detectado) |
-| Tokens | Suma de tokens > umbral | No | Estimación imprecisa si no usas tokenizer real |
-| Híbrida | Mezcla de tipos de mensaje | No | Orden cronológico artificial sin timestamps |
-| Ventana adaptativa | `len(messages) > window_size` | No (solo heurística de tamaño) | Ventana demasiado pequeña en código largo |
-| Prioridad contexto | Tema cambia pero hay mucho historial | Opcional (NLP/embeddings) | Keywords demasiado simples vs. sinónimos |
+
+
+
+| Estrategia         | Dispara cuando…                      | ¿Llama al LLM extra?           | Riesgo principal                               |
+| ------------------ | ------------------------------------ | ------------------------------ | ---------------------------------------------- |
+| Resumen            | Muchos turnos (ej. ≥ 10 msgs)        | Sí (generar resumen)           | Perder matices no reflejados en el resumen     |
+| Filtrado           | Historial largo + reglas/heurísticas | No (solo reglas)               | Falsos negativos (“importante” no detectado)   |
+| Tokens             | Suma de tokens > umbral              | No                             | Estimación imprecisa si no usas tokenizer real |
+| Híbrida            | Mezcla de tipos de mensaje           | No                             | Orden cronológico artificial sin timestamps    |
+| Ventana adaptativa | `len(messages) > window_size`        | No (solo heurística de tamaño) | Ventana demasiado pequeña en código largo      |
+| Prioridad contexto | Tema cambia pero hay mucho historial | Opcional (NLP/embeddings)      | Keywords demasiado simples vs. sinónimos       |
+
 
 ---
+
+
 
 ## 1. Memoria de Resumen (Summarization Memory)
 
@@ -141,6 +155,8 @@ flowchart LR
     class SUM sum
     class LLM chat
 ```
+
+
 
 > **Nota de implementación:** el state incluye `conversation_summary` para **resumir de forma incremental** (nuevo lote + resumen anterior). Los mensajes recientes se mantienen literales; lo antiguo pasa a un único `SystemMessage` con el resumen. La función `should_summarize` encaja como **routing** (`"summarize"` vs `"continue"`) en LangGraph.
 
@@ -191,7 +207,7 @@ def summarize_conversation(state: ChatState) -> dict:
     }
 
 
-def should_summarize(state: ChatState) -> str:
+def  (state: ChatState) -> str:
     """Decide si necesitamos resumir la conversación"""
     if len(state["messages"]) >= 10:
         return "summarize"
@@ -199,6 +215,8 @@ def should_summarize(state: ChatState) -> str:
 ```
 
 ---
+
+
 
 ## 2. Memoria de Filtrado Inteligente
 
@@ -227,7 +245,9 @@ flowchart TB
     class OUT out
 ```
 
-> **Nota de implementación:** `analyze_message_importance` → arista a nodo `filter_important_messages` antes del LLM. Puedes sustituir keywords fijas por un **mini-clasificador** (LLM o reglas de negocio). En el proyecto multi-usuario, la extracción de “facts” a Chroma es otra capa; ver [`MULTIUSER_NOTAS.md`](MULTIUSER_NOTAS.md).
+
+
+> **Nota de implementación:** `analyze_message_importance` → arista a nodo `filter_important_messages` antes del LLM. Puedes sustituir keywords fijas por un **mini-clasificador** (LLM o reglas de negocio). En el proyecto multi-usuario, la extracción de “facts” a Chroma es otra capa; ver `[MULTIUSER_NOTAS.md](MULTIUSER_NOTAS.md)`.
 
 ```python
 def filter_important_messages(state: ChatState) -> dict:
@@ -270,6 +290,8 @@ def analyze_message_importance(state: ChatState) -> str:
 
 ---
 
+
+
 ## 3. Memoria por Límite de Tokens
 
 Gestiona la memoria basándose en el conteo real de tokens, proporcionando control preciso sobre el uso del contexto.
@@ -294,7 +316,9 @@ flowchart LR
     class OUT out
 ```
 
-> **Para aclarar:** `estimate_tokens` (÷4 caracteres) sirve para **aprender el patrón**; en producción usa el contador del modelo (`tiktoken`, `trim_messages` con `token_counter=...`) como en [`memoria_ventana_deslizante.py`](memoria_ventana_deslizante.py). `check_token_limit` puede ir **antes** del nodo LLM o fusionarse con `manage_memory_by_tokens` en un solo nodo `context_optimization` (nombre usado en el chat multi-usuario).
+
+
+> **Para aclarar:** `estimate_tokens` (÷4 caracteres) sirve para **aprender el patrón**; en producción usa el contador del modelo (`tiktoken`, `trim_messages` con `token_counter=...`) como en `[memoria_ventana_deslizante.py](memoria_ventana_deslizante.py)`. `check_token_limit` puede ir **antes** del nodo LLM o fusionarse con `manage_memory_by_tokens` en un solo nodo `context_optimization` (nombre usado en el chat multi-usuario).
 
 ```python
 def estimate_tokens(text: str) -> int:
@@ -351,6 +375,8 @@ def check_token_limit(state: ChatState) -> str:
 
 ---
 
+
+
 ## 4. Memoria Híbrida por Tipo de Mensaje
 
 Aplica diferentes estrategias de retención según el tipo de mensaje, optimizando para diferentes patrones de uso.
@@ -378,6 +404,8 @@ flowchart TB
     class SORT sort
     class ST sy
 ```
+
+
 
 > **Nota de estudio:** las respuestas del asistente suelen ser más verbosas; por eso se guardan **menos** turnos AI que Human. Si usas **tool calling**, añade ramas para `ToolMessage` / `AIMessage` con `tool_calls` para no romper el hilo de una herramienta a medias.
 
@@ -421,13 +449,15 @@ def hybrid_memory_management(state: ChatState) -> dict:
 
 ---
 
+
+
 ## 5. Memoria con Ventana Deslizante Adaptativa
 
 Extiende la ventana deslizante básica con lógica adaptativa que ajusta el tamaño de la ventana según el contexto.
 
 **Cuándo usar:** Cuando la importancia del contexto varía según el tipo de conversación o tarea.
 
-Implementación de referencia en el curso: [`memoria_ventana_deslizante.py`](memoria_ventana_deslizante.py).
+Implementación de referencia en el curso: `[memoria_ventana_deslizante.py](memoria_ventana_deslizante.py)`.
 
 ```mermaid
 flowchart TD
@@ -454,6 +484,8 @@ flowchart TD
     class W0,W1,W2,W3 win
     class CUT cut
 ```
+
+
 
 > **Comparar con el script del curso:** la ventana **fija** del ejemplo usa `trim_messages(strategy="last", max_tokens=...)`: recorta por **tokens**, no por número de mensajes. La ventana **adaptativa** del artículo cambia **cuántos mensajes** conservas según heurísticas de contenido. Puedes unir ambas: primero adaptar N, luego `trim_messages` sobre ese subconjunto.
 
@@ -503,6 +535,8 @@ def determine_window_strategy(state: ChatState) -> str:
 
 ---
 
+
+
 ## 6. Memoria con Prioridad de Contexto
 
 Mantiene mensajes basándose en su relevancia para la conversación actual, usando análisis semántico simple.
@@ -528,7 +562,9 @@ flowchart LR
     class TOP,CRON out
 ```
 
-> **Para aclarar:** `recency_bonus` evita que un mensaje viejo pero muy keyword-rich desplace el turno inmediato anterior. Evolución natural: embeddings + similitud coseno (como Chroma en [`memoria_vectorial_langgraph.py`](memoria_vectorial_langgraph.py)), no solo contar palabras en común.
+
+
+> **Para aclarar:** `recency_bonus` evita que un mensaje viejo pero muy keyword-rich desplace el turno inmediato anterior. Evolución natural: embeddings + similitud coseno (como Chroma en `[memoria_vectorial_langgraph.py](memoria_vectorial_langgraph.py)`), no solo contar palabras en común.
 
 ```python
 def priority_context_memory(state: ChatState) -> dict:
@@ -580,6 +616,8 @@ def calculate_relevance(text: str, keywords: List[str]) -> float:
 
 ---
 
+
+
 ## Pipeline de ejemplo (combinar estrategias)
 
 Patrón típico en un grafo de chat avanzado (similar espíritu al multi-usuario: recuperar → optimizar contexto → responder):
@@ -615,9 +653,13 @@ flowchart LR
     class N3 n3
 ```
 
+
+
 > **Nota:** no hace falta encadenar **las seis** siempre; elige según métricas (coste, quejas de “no recuerdas”, latencia). Empieza por tokens o ventana, luego añade resumen si pierdes hilo en conversaciones largas.
 
 ---
+
+
 
 ## Mejores Prácticas
 
@@ -636,6 +678,8 @@ flowchart LR
 
 ---
 
+
+
 ## Conclusión
 
 La gestión efectiva de memoria en LangGraph va mucho más allá de simplemente mantener los últimos N mensajes. Las estrategias avanzadas como memoria de resumen, filtrado inteligente y ventanas adaptativas pueden transformar dramáticamente la experiencia del usuario, permitiendo conversaciones más largas, contextualizadas y costo-eficientes.
@@ -646,13 +690,17 @@ En los próximos videos del curso, veremos cómo implementar algunas de estas es
 
 ---
 
+
+
 ## Enlaces del repositorio (Tema 5)
 
-| Recurso | Uso |
-| --- | --- |
-| [`MEMORIA_NOTAS.md`](MEMORIA_NOTAS.md) | Mapa de scripts y capas de memoria |
-| [`memoria_ventana_deslizante.py`](memoria_ventana_deslizante.py) | `trim_messages` + checkpoint |
-| [`memoria_vectorial_langgraph.py`](memoria_vectorial_langgraph.py) | Chroma + sesión (complemento a prioridad de contexto) |
-| [`MULTIUSER_NOTAS.md`](MULTIUSER_NOTAS.md) | Pipeline retrieval → trim → LLM → extracción |
+
+| Recurso                                                            | Uso                                                   |
+| ------------------------------------------------------------------ | ----------------------------------------------------- |
+| `[MEMORIA_NOTAS.md](MEMORIA_NOTAS.md)`                             | Mapa de scripts y capas de memoria                    |
+| `[memoria_ventana_deslizante.py](memoria_ventana_deslizante.py)`   | `trim_messages` + checkpoint                          |
+| `[memoria_vectorial_langgraph.py](memoria_vectorial_langgraph.py)` | Chroma + sesión (complemento a prioridad de contexto) |
+| `[MULTIUSER_NOTAS.md](MULTIUSER_NOTAS.md)`                         | Pipeline retrieval → trim → LLM → extracción          |
+
 
 Doc oficial útil: [trim_messages](https://python.langchain.com/api_reference/core/messages/langchain_core.messages.utils.trim_messages.html) · [LangGraph Persistence](https://docs.langchain.com/oss/python/langgraph/persistence)

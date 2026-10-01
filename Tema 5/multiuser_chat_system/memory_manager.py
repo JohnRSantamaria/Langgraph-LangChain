@@ -1,4 +1,5 @@
 # Chroma + chats_meta.json + extracción LLM de memorias. Ver ../MULTIUSER_NOTAS.md
+from abc import abstractmethod
 import os
 import uuid
 import json
