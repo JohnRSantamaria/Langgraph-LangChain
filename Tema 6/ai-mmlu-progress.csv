@@ -1,0 +1,12 @@
+date,model,organization,mmlu_score
+May 2020,GPT-3,OpenAI,43.9
+Dec 2021,Gopher,Google DeepMind,60
+Mar 2022,Chinchilla,Google DeepMind,67.5
+Apr 2022,PaLM,Google,69.3
+Oct 2022,Flan-PaLM,Google,75.2
+Mar 2023,GPT-4,OpenAI,86.4
+Dec 2023,Gemini Ultra,Google,90
+Mar 2024,Claude 3 Opus,Anthropic,86.8
+May 2024,GPT-4o,OpenAI,88.7
+Jul 2024,Llama 3.1 405B,Meta,88.6
+Dec 2024,DeepSeek V3,DeepSeek,88.5
